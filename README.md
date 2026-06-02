@@ -1,8 +1,15 @@
 # Resume Builder
 
+[![CI](https://github.com/nileshcf/resume-builder/actions/workflows/ci.yml/badge.svg)](https://github.com/nileshcf/resume-builder/actions/workflows/ci.yml)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](./LICENSE)
+[![Vite](https://img.shields.io/badge/Vite-5-646CFF?logo=vite&logoColor=white)](https://vitejs.dev)
+[![TypeScript](https://img.shields.io/badge/TypeScript-strict-3178C6?logo=typescript&logoColor=white)](https://www.typescriptlang.org)
+
 An **ATS-first, privacy-first resume builder** that runs **100% in your browser**.
 No backend, no sign-up, no data ever leaves your device — which also means it
 deploys **free** to any static host.
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https://github.com/nileshcf/resume-builder)
 
 > Live preview ⇄ PDF parity is *perfect* (the PDF is the printed preview). DOCX is
 > the editable twin. AI is optional (bring your own key). Everything works offline.
@@ -42,12 +49,21 @@ npm run preview    # serve the production build locally
 
 It’s a static SPA — `npm run build` produces `dist/`. Deploy that anywhere:
 
+- **Vercel (one click):** use the **Deploy with Vercel** button above, or import the
+  repo — [`vercel.json`](./vercel.json) already sets the build, output dir, SPA
+  rewrite, and asset caching headers.
 - **Cloudflare Pages:** framework preset *Vite*, build `npm run build`, output `dist`.
-- **Vercel:** import repo; it auto-detects Vite. Output `dist`.
 - **Netlify:** build `npm run build`, publish `dist`.
 - **GitHub Pages:** push `dist/` (set Vite `base` if not served from root).
 
 No environment variables or server are required.
+
+## CI
+
+[`.github/workflows/ci.yml`](.github/workflows/ci.yml) runs on every push and PR to
+`main`: it installs with `npm ci`, type-checks (`npm run typecheck`), builds
+(`npm run build`), and uploads the `dist/` artifact. [Dependabot](.github/dependabot.yml)
+keeps npm and Actions dependencies current (grouped, weekly).
 
 ## Privacy
 
@@ -59,6 +75,18 @@ fully on-device.
 
 ## Architecture
 
-See [`CLAUDE.md`](./CLAUDE.md) for the design decisions and module map. In short: the
-canonical Zod document (`src/schema/resume.ts`) is the single source of truth; the
-preview, PDF, and DOCX are all projections of it.
+See [`docs/ARCHITECTURE.md`](./docs/ARCHITECTURE.md) for the module map and design
+decisions (render parity, persistence, AI fallbacks). In short: the canonical Zod
+document (`src/schema/resume.ts`) is the single source of truth; the preview, PDF, and
+DOCX are all projections of it.
+
+## Contributing
+
+PRs welcome — see [`CONTRIBUTING.md`](./CONTRIBUTING.md) for setup and the project’s
+load-bearing invariants (stay client-side, never break ATS-safety, schema is the source
+of truth). Run `npm run typecheck && npm run build` before opening a PR.
+
+## License
+
+[MIT](./LICENSE) © Nilesh Verma — [LinkedIn](https://www.linkedin.com/in/nileshvermaa/) ·
+[GitHub](https://github.com/nileshcf)
