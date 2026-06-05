@@ -1,4 +1,5 @@
 import { useEffect, useRef, type ReactNode } from "react";
+import { IconX } from "./Icons";
 
 /**
  * Accessible modal shell shared by all dialogs.
@@ -82,7 +83,7 @@ export function Modal({
       >
         <div className="modal-head">
           <strong>{title}</strong>
-          <button className="icon-btn" onClick={onClose} aria-label="Close dialog">✕</button>
+          <button className="icon-btn" onClick={onClose} aria-label="Close dialog"><IconX size={16} /></button>
         </div>
         <div className="modal-body">{children}</div>
       </div>

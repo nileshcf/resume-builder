@@ -4,41 +4,66 @@ import { fontStack } from "@/theme/fonts";
 
 /**
  * Renders the canonical document to clean, semantic, ATS-safe HTML.
- * No tables, no text boxes, no columns, no images — headings are real <h2>,
- * lists are real <ul>. This same DOM is what gets printed to PDF, so the
- * preview the user approves IS the PDF (perfect preview<->PDF parity).
+ * Layout variants (classic / modern / compact) apply purely via a CSS class
+ * on #resume-paper — the semantic heading/list structure never changes, so
+ * ATS-safety holds for all layouts.
+ * Profile photo is rendered inline only when present; it has an ATS caveat
+ * in the form UI.
  */
 export function ResumePreview({ doc }: { doc: ResumeDocument }) {
   const { theme, header } = doc;
+  const layout = theme.layout ?? "classic";
+
   const paperStyle: CSSProperties = {
     width: theme.pageSize === "A4" ? "210mm" : "8.5in",
     fontFamily: fontStack(theme.fontFamily),
-    fontSize: `${theme.baseSizePt}pt`,
-    lineHeight: theme.lineHeight,
+    fontSize: layout === "compact" ? `${Math.max(9, theme.baseSizePt - 0.5)}pt` : `${theme.baseSizePt}pt`,
+    lineHeight: layout === "compact" ? Math.max(1, theme.lineHeight - 0.05) : theme.lineHeight,
     paddingTop: `${theme.margins.top}in`,
     paddingRight: `${theme.margins.right}in`,
     paddingBottom: `${theme.margins.bottom}in`,
     paddingLeft: `${theme.margins.left}in`,
-    color: "#1a1a1a", // body text stays near-black for readability/ATS
+    color: "#1a1a1a",
     // @ts-expect-error custom props consumed by styles.css
-    "--sec-gap": `${theme.sectionGapPt}pt`,
+    "--sec-gap": `${layout === "compact" ? Math.max(4, theme.sectionGapPt - 3) : theme.sectionGapPt}pt`,
     "--resume-accent": theme.accentColor,
   };
 
   const visibleContacts = header.contacts.filter((c) => c.visible && c.value.trim());
 
   return (
-    <div className="paper" style={paperStyle} id="resume-paper">
-      <header>
-        <h1 className="resume-name">{header.name || "Your Name"}</h1>
-        {header.headline && <p className="resume-headline">{header.headline}</p>}
-        {visibleContacts.length > 0 && (
-          <div className="resume-contacts">
-            {visibleContacts
-              .map((c) => (c.label ? `${c.label}: ${c.value}` : c.value))
-              .join("  •  ")}
-          </div>
+    <div
+      className={`paper layout-${layout}`}
+      style={paperStyle}
+      id="resume-paper"
+      data-layout={layout}
+    >
+      {/* Modern layout: accent stripe left edge */}
+      {layout === "modern" && (
+        <div className="modern-stripe" aria-hidden="true" />
+      )}
+
+      <header className="resume-header">
+        {header.photoDataUrl && (
+          <img
+            className="resume-photo"
+            src={header.photoDataUrl}
+            alt={header.name || "Profile photo"}
+          />
         )}
+        <div className="resume-header-text">
+          <h1 className="resume-name">{header.name || "Your Name"}</h1>
+          {header.headline && (
+            <p className="resume-headline">{header.headline}</p>
+          )}
+          {visibleContacts.length > 0 && (
+            <div className="resume-contacts">
+              {visibleContacts
+                .map((c) => (c.label ? `${c.label}: ${c.value}` : c.value))
+                .join("  •  ")}
+            </div>
+          )}
+        </div>
       </header>
 
       {doc.sections
@@ -72,7 +97,6 @@ function ItemView({
 }) {
   const f = item.fields;
 
-  // Custom sections render through their itemTemplate -> one plain ATS-safe line.
   if (section.type === "custom" && section.customKey) {
     const schema = doc.customSchemas[section.customKey];
     const line = schema
@@ -87,7 +111,6 @@ function ItemView({
     return <p className="resume-item">{f.text}</p>;
   }
 
-  // experience / education / projects / certifications
   const title = f.role || f.degree || f.title || "";
   const org = f.org || "";
   const dates = [f.start, f.end].filter(Boolean).join(" – ");
@@ -103,10 +126,12 @@ function ItemView({
             {title}
             {org && <>{title ? ", " : ""}{org}</>}
           </span>
-          <span>{dates}</span>
+          <span className="it-dates">{dates}</span>
         </div>
       )}
-      {f.location && <div style={{ fontStyle: "italic", fontSize: "9.5pt" }}>{f.location}</div>}
+      {f.location && (
+        <div className="it-location">{f.location}</div>
+      )}
       {item.bullets.some((b) => b.text.trim()) && (
         <ul>
           {item.bullets

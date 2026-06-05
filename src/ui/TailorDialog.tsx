@@ -4,6 +4,7 @@ import { analyzeJd, type JdReport } from "@/assist/jdMatch";
 import { tailorSuggestions, type Suggestion } from "@/ai/capabilities";
 import { aiEnabled, loadAiConfig } from "@/ai/config";
 import { Modal } from "./Modal";
+import { IconZap } from "./Icons";
 
 export function TailorDialog({ onClose }: { onClose: () => void }) {
   const doc = useResume((s) => s.doc);
@@ -47,7 +48,7 @@ export function TailorDialog({ onClose }: { onClose: () => void }) {
             </button>
             {report && hasAi && (
               <button className="btn" onClick={getSuggestions} disabled={loadingAi}>
-                {loadingAi ? "Thinking…" : "✨ Get AI suggestions"}
+                {loadingAi ? "Thinking…" : <><IconZap size={13} /> AI suggestions</>}
               </button>
             )}
           </div>

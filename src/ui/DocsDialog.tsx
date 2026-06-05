@@ -3,6 +3,7 @@ import { useResume } from "@/store/resumeStore";
 import { listDocuments, listVersions, type VersionSnapshot } from "@/store/db";
 import type { ResumeDocument } from "@/schema/resume";
 import { Modal } from "./Modal";
+import { IconTrash, IconCopy, IconPlus } from "./Icons";
 
 const when = (iso: string) => new Date(iso).toLocaleString();
 
@@ -44,25 +45,24 @@ export function DocsDialog({ onClose }: { onClose: () => void }) {
                 {d.id !== doc.id && (
                   <button className="btn" onClick={() => switchDoc(d.id)}>Open</button>
                 )}
-                <button
-                  className="icon-btn"
-                  title="Delete"
+                <button className="icon-btn" title="Delete"
                   onClick={() => {
                     if (confirm(`Delete "${d.meta.title}"? This can't be undone.`)) {
                       void removeDoc(d.id).then(refresh);
                     }
-                  }}
-                >
-                  🗑
+                  }}>
+                  <IconTrash size={15} />
                 </button>
               </div>
             ))}
           </div>
 
-          <div style={{ display: "flex", gap: 8, marginTop: 10 }}>
-            <button className="btn" onClick={() => newResume().then(refresh)}>+ New resume</button>
-            <button className="btn" onClick={() => duplicate().then(refresh)}>
-              Duplicate as variant
+          <div style={{ display: "flex", gap: 8, marginTop: 10, flexWrap:"wrap" }}>
+            <button className="btn sm" onClick={() => newResume().then(refresh)}>
+              <IconPlus size={13} /> New resume
+            </button>
+            <button className="btn sm" onClick={() => duplicate().then(refresh)}>
+              <IconCopy size={13} /> Duplicate as variant
             </button>
           </div>
 

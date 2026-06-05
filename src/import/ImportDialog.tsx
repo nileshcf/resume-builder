@@ -6,6 +6,7 @@ import { useResume } from "@/store/resumeStore";
 import { snapshot } from "@/store/db";
 import type { SectionType } from "@/schema/resume";
 import { Modal } from "@/ui/Modal";
+import { IconUpload, IconChevronUp, IconChevronDown, IconTrash } from "@/ui/Icons";
 
 type Stage = "upload" | "parsing" | "triage" | "error";
 
@@ -78,13 +79,12 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
               never leaves your device.
             </p>
             <label className="dropzone">
-              <input
-                type="file"
-                accept=".pdf,.docx"
-                style={{ display: "none" }}
-                onChange={(e) => e.target.files?.[0] && handleFile(e.target.files[0])}
-              />
-              <span>📄 Click to choose a PDF or DOCX</span>
+              <input type="file" accept=".pdf,.docx"
+                style={{ display:"none" }}
+                onChange={e => e.target.files?.[0] && handleFile(e.target.files[0])} />
+              <IconUpload size={28} />
+              <span className="dropzone-label">Click to choose a PDF or DOCX</span>
+              <span className="dropzone-sub">Parsed entirely in your browser — never uploaded</span>
             </label>
           </div>
         )}
@@ -134,9 +134,9 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
                       <option key={o.value} value={o.value}>{o.label}</option>
                     ))}
                   </select>
-                  <button className="icon-btn" onClick={() => move(b.id, -1)} aria-label="Move up">↑</button>
-                  <button className="icon-btn" onClick={() => move(b.id, 1)} aria-label="Move down">↓</button>
-                  <button className="icon-btn" onClick={() => remove(b.id)} aria-label="Delete">🗑</button>
+                  <button className="icon-btn" onClick={() => move(b.id, -1)} aria-label="Move up"><IconChevronUp size={14} /></button>
+                  <button className="icon-btn" onClick={() => move(b.id, 1)} aria-label="Move down"><IconChevronDown size={14} /></button>
+                  <button className="icon-btn" onClick={() => remove(b.id)} aria-label="Delete"><IconTrash size={14} /></button>
                 </div>
                 <textarea
                   className="triage-lines"

@@ -41,6 +41,14 @@ export const ThemeSchema = z.object({
     .regex(/^#[0-9a-fA-F]{6}$/)
     .default("#1a1a1a"),
   pageSize: z.enum(["Letter", "A4"]).default("Letter"),
+  /**
+   * Layout variant. Purely visual — same semantic HTML, different CSS class on
+   * #resume-paper so ATS-safety is never affected.
+   *   classic  — centred name header, full-width ruled sections
+   *   modern   — name + accent sidebar stripe, left-aligned header
+   *   compact  — tighter spacing, smaller name, optimised for 1-page
+   */
+  layout: z.enum(["classic", "modern", "compact"]).default("classic"),
 });
 export type Theme = z.infer<typeof ThemeSchema>;
 
@@ -59,6 +67,12 @@ export const HeaderSchema = z.object({
   name: z.string().default(""),
   headline: z.string().default(""),
   contacts: z.array(ContactSchema).default([]),
+  /**
+   * Optional profile photo. Stored as a data-URL (base64) so it's portable,
+   * offline, and never uploaded to any server. ATS caveat is shown in the UI.
+   * null = no photo.
+   */
+  photoDataUrl: z.string().nullable().default(null),
 });
 export type Header = z.infer<typeof HeaderSchema>;
 
