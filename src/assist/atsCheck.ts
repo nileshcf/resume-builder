@@ -98,6 +98,18 @@ export function runAtsCheck(doc: ResumeDocument): AtsReport {
     detail: `${countBullets(doc)} accomplishment bullet(s).`,
   });
 
+  // Photo: many ATS parsers (Taleo, Workday, Greenhouse) skip or garble images.
+  // Flag it as a warn — not fail, because some markets/roles expect it.
+  if (doc.header.photoDataUrl) {
+    checks.push({
+      label: "Profile photo",
+      status: "warn",
+      detail:
+        "Photo present — most ATS parsers ignore or misread images. " +
+        "Only keep it if the role or region expects one (e.g. some EU/Asian markets).",
+    });
+  }
+
   // Score: pass=full, warn=half, fail=0, averaged.
   const pts: number[] = checks.map((c) => (c.status === "pass" ? 1 : c.status === "warn" ? 0.5 : 0));
   const score = Math.round((pts.reduce((a, b) => a + b, 0) / checks.length) * 100);

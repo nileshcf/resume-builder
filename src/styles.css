@@ -469,7 +469,23 @@ button, input, select, textarea { font: inherit; }
   display: flex; flex-direction: column; gap: 2px; padding: 5px;
 }
 .layout-card .lc-name { font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: .05em; }
-.layout-card .lc-desc { font-size: 10px; color: var(--muted); margin-top: 2px; }
+.layout-card .lc-desc { font-size: 10px; color: var(--muted); margin-top: 2px; line-height: 1.3; }
+.lc-ats-badge {
+  font-size: 9.5px; font-weight: 700; padding: 2px 6px; border-radius: 4px;
+  margin-top: 5px; text-align: center; letter-spacing: .01em;
+}
+.lc-ats-photo { background: #fef9c3; color: #a16207; }
+.lc-ats-clean { background: #dcfce7; color: #15803d; }
+.lc-ats-note {
+  display: flex; align-items: center; justify-content: center; gap: 3px;
+  font-size: 9px; color: var(--ok); margin-top: 3px; font-weight: 600;
+}
+.field-label-sub { font-weight: 400; text-transform: none; letter-spacing: 0; color: var(--muted); font-size: 11px; }
+.compact-no-photo-note {
+  display: flex; align-items: center; gap: 6px; font-size: 12px; color: var(--ok);
+  background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 8px; padding: 8px 10px;
+  margin-bottom: 16px;
+}
 
 /* thumbnail lines */
 .lt-line { border-radius: 2px; background: currentColor; opacity: .15; }
