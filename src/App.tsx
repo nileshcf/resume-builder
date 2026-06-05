@@ -6,7 +6,7 @@ import { FormPane } from "./editor/FormPane";
 import { AtsMeter } from "./ui/AtsMeter";
 import { CreditFooter } from "./ui/CreditFooter";
 import {
-  IconSettings, IconDownload, IconUpload, IconPalette,
+  IconAI, IconDownload, IconUpload, IconPalette,
   IconTarget, IconHistory, IconMenu, IconX, IconSave, IconZap,
 } from "./ui/Icons";
 import { exportPdf } from "./export/pdf";
@@ -68,7 +68,7 @@ export function App() {
         <IconUpload size={15} /><span className="btn-label">Import</span>
       </button>
       <button className="btn" onClick={() => { setShowSettings(true); setMenuOpen(false); }} aria-label="AI settings">
-        <IconSettings size={15} /><span className="btn-label">AI</span>
+        <IconAI size={15} /><span className="btn-label">AI</span>
       </button>
       <button className="btn" onClick={() => exportDocx(doc)} aria-label="Download DOCX">
         <IconDownload size={15} /><span className="btn-label">.docx</span>

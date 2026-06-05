@@ -41,7 +41,38 @@ export const IconBriefcase   = mk("M5 4V2h6v2M2 4h12a1 1 0 011 1v8a1 1 0 01-1 1H
 export const IconStar        = mk("M8 1l1.9 3.8L14 5.7l-3 2.9.7 4.1L8 10.6l-3.7 2.1.7-4.1L2 5.7l4.1-.9L8 1z");
 export const IconCopy        = mk("M4 4H2a1 1 0 00-1 1v9a1 1 0 001 1h9a1 1 0 001-1v-2M6 1h8a1 1 0 011 1v8a1 1 0 01-1 1H6a1 1 0 01-1-1V2a1 1 0 011-1z");
 export const IconHistory     = mk("M1 8a7 7 0 1014 0M1 8V4M1 8l3-1M8 5v4l2.5 2.5");
-export const IconAI          = mk("M3 8h2M11 8h2M8 3v2M8 11v2M5 5l1.4 1.4M9.6 9.6l1.4 1.4M5 11l1.4-1.4M9.6 6.4l1.4-1.4M8 10a2 2 0 100-4 2 2 0 000 4z");
+/**
+ * AI icon — a 3-layer neural network (input → hidden → output nodes + edges).
+ * Universally understood as "AI/ML" and visually distinct from the gear/palette.
+ * Uses a custom multi-path SVG instead of the single-path mk() shorthand.
+ */
+export function IconAI({ size = 16, className }: IconProps) {
+  return (
+    <svg width={size} height={size} viewBox="0 0 16 16" fill="none"
+      stroke="currentColor" strokeWidth={1.5} strokeLinecap="round"
+      strokeLinejoin="round" className={className} aria-hidden>
+      {/* input layer — 3 nodes on left */}
+      <circle cx="2.5" cy="3.5"  r="1.2" />
+      <circle cx="2.5" cy="8"    r="1.2" />
+      <circle cx="2.5" cy="12.5" r="1.2" />
+      {/* hidden layer — 2 nodes in centre */}
+      <circle cx="8"   cy="5.5"  r="1.2" />
+      <circle cx="8"   cy="10.5" r="1.2" />
+      {/* output layer — 1 node on right */}
+      <circle cx="13.5" cy="8"   r="1.2" />
+      {/* edges: input → hidden */}
+      <line x1="3.7"  y1="3.8"  x2="6.8"  y2="5.2"  />
+      <line x1="3.7"  y1="8"    x2="6.8"  y2="5.8"  />
+      <line x1="3.7"  y1="8"    x2="6.8"  y2="10.2" />
+      <line x1="3.7"  y1="12.2" x2="6.8"  y2="10.8" />
+      <line x1="3.7"  y1="4.2"  x2="6.8"  y2="10.2" />
+      <line x1="3.7"  y1="11.8" x2="6.8"  y2="5.8"  />
+      {/* edges: hidden → output */}
+      <line x1="9.2"  y1="5.8"  x2="12.3" y2="7.5"  />
+      <line x1="9.2"  y1="10.2" x2="12.3" y2="8.5"  />
+    </svg>
+  );
+}
 export const IconImage       = mk("M1 3a2 2 0 012-2h10a2 2 0 012 2v10a2 2 0 01-2 2H3a2 2 0 01-2-2V3zM1 11l4-4 3 3 2-2 4 4M11 6a1 1 0 100-2 1 1 0 000 2z");
 export const IconLayout      = mk("M1 1h14v14H1zM1 5h14M6 5v10");
 export const IconTarget      = mk("M14 8A6 6 0 112 8a6 6 0 0112 0zM10 8a2 2 0 11-4 0 2 2 0 014 0zM8 8h.01");
