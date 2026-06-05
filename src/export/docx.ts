@@ -73,6 +73,36 @@ export async function exportDocx(doc: ResumeDocument) {
   saveAs(blob, `${doc.meta.title || "resume"}.docx`);
 }
 
+/**
+ * Parse simple HTML (b, strong, i, em, a, br) into DOCX TextRun objects so
+ * formatting from the inline editor carries through to the exported Word file.
+ * Uses the browser DOM for parsing (this code only runs in-browser anyway).
+ */
+function htmlToRuns(html: string, font: string, size: number): TextRun[] {
+  if (!html?.trim()) return [new TextRun({ text: "", size, font })];
+  const div = document.createElement("div");
+  div.innerHTML = html;
+  const runs: TextRun[] = [];
+
+  function walk(node: Node, bold: boolean, italic: boolean) {
+    if (node.nodeType === 3) {
+      const t = node.textContent ?? "";
+      if (t) runs.push(new TextRun({ text: t, bold: bold || undefined, italics: italic || undefined, size, font }));
+      return;
+    }
+    if (node.nodeType !== 1) return;
+    const el  = node as Element;
+    const tag = el.tagName.toLowerCase();
+    if (tag === "br") { runs.push(new TextRun({ text: "\n", size, font })); return; }
+    const b2 = bold   || tag === "b" || tag === "strong";
+    const i2 = italic || tag === "i" || tag === "em";
+    for (const child of Array.from(node.childNodes)) walk(child, b2, i2);
+  }
+
+  walk(div, false, false);
+  return runs.length ? runs : [new TextRun({ text: div.textContent ?? "", size, font })];
+}
+
 function sectionHeading(title: string, font: string, accent: string): Paragraph {
   return new Paragraph({
     heading: HeadingLevel.HEADING_2,
@@ -105,7 +135,7 @@ function itemParagraphs(
 
   if (section.type === "summary" || section.type === "skills") {
     if (f.text?.trim())
-      out.push(new Paragraph({ widowControl: true, children: [new TextRun({ text: f.text, size: sizeHalfPt, font })] }));
+      out.push(new Paragraph({ widowControl: true, children: htmlToRuns(f.text, font, sizeHalfPt) }));
     return out;
   }
 
@@ -134,7 +164,7 @@ function itemParagraphs(
       new Paragraph({
         bullet: { level: 0 },
         widowControl: true,
-        children: [new TextRun({ text: b.text, size: sizeHalfPt, font })],
+        children: htmlToRuns(b.text, font, sizeHalfPt),
       })
     );
   }

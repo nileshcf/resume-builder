@@ -610,3 +610,124 @@ button, input, select, textarea { font: inherit; }
   .topbar-brand h1 { font-size: 13px; }
   .layout-grid { grid-template-columns: 1fr; }
 }
+
+/* =========================================================================
+   Inline editing — right pane
+   ========================================================================= */
+.rich-editable {
+  cursor: text;
+  border-radius: 3px;
+  outline: 2px solid transparent;
+  outline-offset: 1px;
+  transition: outline-color .12s, background .12s;
+  /* don't break layout: display is inherited from the element tag */
+}
+.rich-editable:hover {
+  outline-color: rgba(37,99,235,.25);
+  background: rgba(37,99,235,.04);
+}
+.rich-editable:focus {
+  outline-color: rgba(37,99,235,.5);
+  background: rgba(37,99,235,.03);
+}
+/* placeholder via CSS attr — shown when element is empty */
+.rich-editable[data-ph]:empty::before {
+  content: attr(data-ph);
+  color: #bbb;
+  pointer-events: none;
+  font-style: italic;
+  font-weight: 400;
+}
+/* keep heading / paragraph styles intact while editing */
+.rich-editable h1, .rich-editable h2 { outline: none; }
+/* links inside editable elements */
+.rich-editable a { color: var(--accent); text-decoration: underline; cursor: pointer; }
+
+/* =========================================================================
+   Inline editing — left pane (rich-field replaces textarea)
+   ========================================================================= */
+.rich-field {
+  min-height: 52px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  font-size: 13px; line-height: 1.6;
+  white-space: pre-wrap; word-break: break-word;
+  cursor: text;
+  transition: border-color .15s, box-shadow .15s;
+  color: var(--text);
+  outline: none;
+}
+.rich-field:focus {
+  border-color: var(--border-focus);
+  box-shadow: 0 0 0 3px rgba(37,99,235,.10);
+}
+.rich-field[data-ph]:empty::before {
+  content: attr(data-ph);
+  color: #aaa;
+  pointer-events: none;
+  font-style: italic;
+}
+/* single-line bullet rows */
+.rich-field-sm { min-height: 36px; padding: 6px 10px; white-space: nowrap; overflow: hidden; }
+/* bold / italic rendered inside rich fields */
+.rich-field b, .rich-field strong { font-weight: 700; }
+.rich-field i, .rich-field em { font-style: italic; }
+.rich-field a { color: var(--accent); text-decoration: underline; }
+
+.rich-field-hint {
+  font-size: 10px; color: var(--muted); margin-bottom: 3px;
+  display: flex; align-items: center; gap: 4px;
+}
+
+/* =========================================================================
+   Format toolbar (floating, dark)
+   ========================================================================= */
+.format-toolbar {
+  position: fixed;
+  display: flex; align-items: center; gap: 2px;
+  background: #1e293b;
+  border: 1px solid rgba(255,255,255,.1);
+  border-radius: 9px; padding: 5px;
+  box-shadow: 0 6px 24px rgba(0,0,0,.35);
+  z-index: 9999;
+  pointer-events: all;
+  /* prevent layout-shift glitch on first paint */
+  animation: toolbar-in .1s ease;
+}
+@keyframes toolbar-in {
+  from { opacity: 0; transform: translate(-50%, calc(-100% - 14px)) scale(.95); }
+  to   { opacity: 1; transform: translate(-50%, calc(-100% - 10px)) scale(1); }
+}
+/* arrow pointer */
+.format-toolbar::after {
+  content: "";
+  position: absolute; bottom: -5px; left: 50%;
+  transform: translateX(-50%);
+  border: 5px solid transparent;
+  border-top: 5px solid #1e293b;
+  border-bottom: 0;
+}
+.fmt-btn {
+  width: 32px; height: 30px;
+  border: none; background: transparent;
+  color: #cbd5e1; border-radius: 6px; cursor: pointer;
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; line-height: 1;
+  transition: background .1s, color .1s;
+}
+.fmt-btn:hover { background: rgba(255,255,255,.12); color: #fff; }
+.fmt-btn.active { background: rgba(255,255,255,.18); color: #fff; }
+.fmt-btn b { font-size: 14px; }
+.fmt-btn.fmt-italic i { font-size: 14px; font-style: italic; }
+.fmt-sep { width: 1px; height: 20px; background: rgba(255,255,255,.15); margin: 0 2px; flex: none; }
+
+/* link input row inside toolbar */
+.fmt-link-row { display: flex; align-items: center; gap: 4px; padding: 2px; }
+.fmt-link-input {
+  background: rgba(255,255,255,.1); border: 1px solid rgba(255,255,255,.2);
+  border-radius: 5px; color: #fff; font-size: 12px;
+  padding: 4px 8px; width: 200px; outline: none;
+}
+.fmt-link-input:focus { border-color: rgba(255,255,255,.5); }
+.fmt-link-input::placeholder { color: rgba(255,255,255,.4); }

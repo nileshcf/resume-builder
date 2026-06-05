@@ -5,6 +5,7 @@ import { PreviewStage } from "./preview/PreviewStage";
 import { FormPane } from "./editor/FormPane";
 import { AtsMeter } from "./ui/AtsMeter";
 import { CreditFooter } from "./ui/CreditFooter";
+import { FormatToolbar } from "./ui/FormatToolbar";
 import {
   IconAI, IconDownload, IconUpload, IconPalette,
   IconTarget, IconHistory, IconMenu, IconX, IconSave, IconZap,
@@ -180,6 +181,9 @@ export function App() {
       <CreditFooter />
 
       {/* ---- Dialogs ---------------------------------------------------- */}
+      {/* Global floating format toolbar — activates on any .rich-editable selection */}
+      <FormatToolbar />
+
       <Suspense fallback={null}>
         {showImport   && <ImportDialog   onClose={() => setShowImport(false)}   />}
         {showSettings && <SettingsDialog onClose={() => setShowSettings(false)} />}

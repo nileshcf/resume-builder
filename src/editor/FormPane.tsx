@@ -8,6 +8,7 @@ import {
   IconChevronUp, IconChevronDown, IconEye, IconEyeOff,
   IconTrash, IconPlus, IconZap, IconCheck,
 } from "@/ui/Icons";
+import { InlineEdit } from "@/preview/InlineEdit";
 
 export function FormPane() {
   const doc        = useResume(s => s.doc);
@@ -245,6 +246,7 @@ function TextSection({ isSummary, value, onChange }: {
 }) {
   const [busy, setBusy] = useState(false);
   const doc = useResume(s => s.doc);
+  const plain = value.replace(/<[^>]+>/g, "");
 
   async function generate() {
     setBusy(true);
@@ -255,13 +257,18 @@ function TextSection({ isSummary, value, onChange }: {
 
   return (
     <div className="field">
-      <textarea rows={3}
+      <div className="rich-field-hint">Select text for formatting options</div>
+      <InlineEdit
+        as="div"
+        className="rich-field"
+        value={value}
+        onChange={onChange}
         placeholder={isSummary ? "2–3 line professional summary…" : "JavaScript, React, Node.js, …"}
-        value={value} onChange={e => onChange(e.target.value)} />
+      />
       {isSummary && (
         <div className="bullet-foot">
           <span className="bullet-tips">
-            {value.trim() ? "" : "Tip: fill experience first, then generate."}
+            {plain.trim() ? "" : "Tip: fill experience first, then generate."}
           </span>
           <button className="link-btn" onClick={generate} disabled={busy}>
             <IconZap size={13} />
@@ -275,39 +282,41 @@ function TextSection({ isSummary, value, onChange }: {
 
 function BulletRow({ text, onChange }: { text: string; onChange: (v: string) => void }) {
   const [busy, setBusy] = useState(false);
-  const hint = analyzeBullet(text);
+  const plain = text.replace(/<[^>]+>/g, "");
+  const hint  = analyzeBullet(plain);
 
   async function improve() {
-    if (!text.trim()) return;
+    if (!plain.trim()) return;
     setBusy(true);
-    try { const r = await improveBullet(text); onChange(r.text); }
+    try { const r = await improveBullet(plain); onChange(r.text); }
     catch (e) { alert(e instanceof Error ? e.message : "Improve failed."); }
     finally { setBusy(false); }
   }
 
   return (
     <div className="field">
-      <textarea rows={2}
-        placeholder="Accomplishment… start with a verb, add a number or %"
-        value={text} onChange={e => onChange(e.target.value)} />
+      <InlineEdit
+        as="div"
+        className="rich-field rich-field-sm"
+        value={text}
+        onChange={onChange}
+        singleLine
+        placeholder="Accomplishment… start with a verb, add a % or $"
+      />
       <div className="bullet-foot">
         <div className="bullet-tags">
-          {text.trim() && (
+          {plain.trim() && (
             <>
               <span className={`tag ${hint.startsWithVerb ? "tag-ok" : "tag-warn"}`}>
-                {hint.startsWithVerb
-                  ? <><IconCheck size={10} /> verb</>
-                  : "weak opener"}
+                {hint.startsWithVerb ? <><IconCheck size={10} /> verb</> : "weak opener"}
               </span>
               <span className={`tag ${hint.hasMetric ? "tag-ok" : "tag-warn"}`}>
-                {hint.hasMetric
-                  ? <><IconCheck size={10} /> metric</>
-                  : "no metric"}
+                {hint.hasMetric ? <><IconCheck size={10} /> metric</> : "no metric"}
               </span>
             </>
           )}
         </div>
-        <button className="link-btn" onClick={improve} disabled={busy || !text.trim()}>
+        <button className="link-btn" onClick={improve} disabled={busy || !plain.trim()}>
           <IconZap size={12} />
           {busy ? "Improving…" : "Improve"}
         </button>
