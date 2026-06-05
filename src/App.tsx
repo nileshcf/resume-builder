@@ -10,6 +10,7 @@ import {
   IconTarget, IconHistory, IconMenu, IconX, IconSave, IconZap,
 } from "./ui/Icons";
 import { exportPdf } from "./export/pdf";
+import { useSplitPane } from "./hooks/useSplitPane";
 
 const ImportDialog  = lazy(() => import("./import/ImportDialog").then(m  => ({ default: m.ImportDialog  })));
 const SettingsDialog= lazy(() => import("./ui/SettingsDialog") .then(m  => ({ default: m.SettingsDialog })));
@@ -28,6 +29,7 @@ export function App() {
   const rename   = useResume(s => s.rename);
 
   const [mobileTab,   setMobileTab]   = useState<"edit"|"preview">("edit");
+  const { leftPx, handleRef } = useSplitPane();
   const [showImport,  setShowImport]  = useState(false);
   const [showSettings,setShowSettings]= useState(false);
   const [showTailor,  setShowTailor]  = useState(false);
@@ -153,10 +155,23 @@ export function App() {
       </div>
 
       {/* ---- Main split ------------------------------------------------- */}
-      <div className="split">
+      <div
+        className="split"
+        style={{ gridTemplateColumns: `${leftPx}px 6px 1fr` }}
+      >
         <div className={`pane form-pane ${mobileTab === "preview" ? "hide-mobile" : ""}`}>
           <FormPane />
         </div>
+
+        {/* Drag handle — hidden on mobile (tabbed layout, no split) */}
+        <div
+          ref={handleRef}
+          className="split-handle"
+          role="separator"
+          aria-label="Resize panes"
+          aria-orientation="vertical"
+        />
+
         <div className={`pane preview-pane ${mobileTab === "edit" ? "hide-mobile" : ""}`}>
           <PreviewStage doc={doc} />
         </div>

@@ -111,8 +111,49 @@ button, input, select, textarea { font: inherit; }
 /* ---- Split layout ------------------------------------------------------ */
 .split {
   display: grid;
-  grid-template-columns: 380px 1fr;
+  /* columns set inline via useSplitPane: leftPx 6px 1fr */
+  grid-template-columns: 380px 6px 1fr;
   flex: 1; min-height: 0;
+}
+
+/* Drag handle */
+.split-handle {
+  grid-column: 2;
+  cursor: col-resize;
+  background: var(--border);
+  position: relative;
+  z-index: 10;
+  transition: background .15s;
+  /* prevent text selection while dragging */
+  user-select: none;
+  -webkit-user-select: none;
+  touch-action: none;
+}
+.split-handle::after {
+  content: "";
+  position: absolute;
+  inset: 0 -4px; /* widen the hit-area without widening the visual */
+}
+.split-handle:hover,
+.split-handle:active {
+  background: var(--accent);
+}
+/* Subtle dots grip indicator */
+.split-handle::before {
+  content: "⋮";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-size: 14px;
+  color: var(--muted);
+  line-height: 1;
+  pointer-events: none;
+  opacity: .5;
+}
+.split-handle:hover::before {
+  color: #fff;
+  opacity: 1;
 }
 .pane { overflow: auto; min-height: 0; }
 .form-pane {
@@ -514,7 +555,7 @@ button, input, select, textarea { font: inherit; }
    Responsive — tablet (≤ 1024px)
    ========================================================================= */
 @media (max-width: 1024px) {
-  .split { grid-template-columns: 340px 1fr; }
+  .split { grid-template-columns: 320px 6px 1fr; }
   .topbar { gap: 6px; padding: 0 10px; }
   .topbar .btn-label { display: none; }   /* hide text in icon buttons */
   .credit-role { display: none; }
@@ -532,8 +573,9 @@ button, input, select, textarea { font: inherit; }
   .topbar-actions { display: none !important; }
   .mobile-menu-btn { display: flex !important; }
 
-  /* split → single pane, tabbar shown */
+  /* split → single pane, tabbar shown, handle hidden */
   .split { display: flex; flex-direction: column; }
+  .split-handle { display: none; }
   .tabbar {
     display: flex; gap: 4px; padding: 6px 10px;
     background: var(--panel); border-bottom: 1px solid var(--border);
