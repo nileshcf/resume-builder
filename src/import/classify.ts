@@ -96,6 +96,20 @@ export function classify(lines: RawLine[]): ClassifiedBlock[] {
       confidence: hasContact ? "high" : "low",
       lines: headerLines,
     });
+  } else {
+    // Fallback: if no header block was produced (resume starts with heading),
+    // take the first 1-3 non-heading lines as a low-confidence header candidate
+    const nonHeadingLines = lines.filter(l => !matchKeyword(l.text) && !looksLikeHeading(l, medianFont));
+    if (nonHeadingLines.length > 0) {
+      const fallbackLines = nonHeadingLines.slice(0, 3).map(l => l.text);
+      blocks.unshift({
+        id: newId(),
+        guessedType: "header",
+        guessedTitle: "Header / Contact",
+        confidence: "low",
+        lines: fallbackLines,
+      });
+    }
   }
 
   // Demote empty blocks; flag blocks whose body is suspiciously short/long as low conf.

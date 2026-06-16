@@ -58,7 +58,26 @@ export async function extractDocx(file: File): Promise<RawLine[]> {
   const lines: RawLine[] = [];
 
   dom.body.querySelectorAll("h1,h2,h3,h4,p,li").forEach((el) => {
-    const text = (el.textContent ?? "").replace(/\s+/g, " ").trim();
+    // Sanitize HTML to only allow b, strong, i, em, br tags
+    const allowedTags = new Set(["b", "strong", "i", "em", "br"]);
+    
+    function sanitize(node: Node): string {
+      if (node.nodeType === 3) {
+        return node.textContent ?? "";
+      }
+      if (node.nodeType !== 1) return "";
+      const el = node as Element;
+      const tag = el.tagName.toLowerCase();
+      if (!allowedTags.has(tag)) {
+        // Skip disallowed tags but keep their children
+        return Array.from(node.childNodes).map(sanitize).join("");
+      }
+      const inner = Array.from(node.childNodes).map(sanitize).join("");
+      if (tag === "br") return "<br>";
+      return `<${tag}>${inner}</${tag}>`;
+    }
+
+    const text = sanitize(el).replace(/\s+/g, " ").trim();
     if (!text) return;
     const isHeading = /^H[1-4]$/.test(el.tagName);
     lines.push({

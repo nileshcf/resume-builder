@@ -78,6 +78,10 @@ export function ImportDialog({ onClose }: { onClose: () => void }) {
               Upload a PDF or DOCX. Everything is parsed <b>in your browser</b> — the file
               never leaves your device.
             </p>
+            <p className="muted" style={{ fontSize: 12 }}>
+              Note: Heavily multi-column or graphic-heavy PDFs may parse imperfectly.
+              The triage screen lets you review and fix any issues.
+            </p>
             <label className="dropzone">
               <input type="file" accept=".pdf,.docx"
                 style={{ display:"none" }}

@@ -13,6 +13,9 @@ const STACKS: Record<Theme["fontFamily"], string> = {
   Georgia: `Georgia, "Liberation Serif", "Times New Roman", serif`,
   "Times New Roman": `"Times New Roman", "Liberation Serif", Times, serif`,
   Garamond: `Garamond, "EB Garamond", "Cormorant Garamond", Georgia, serif`,
+  Cambria: `Cambria, "Crimson Text", Georgia, serif`,
+  Verdana: `Verdana, "DejaVu Sans", "Segoe UI", sans-serif`,
+  Tahoma: `Tahoma, Verdana, "Segoe UI", sans-serif`,
 };
 
 export function fontStack(family: Theme["fontFamily"]): string {

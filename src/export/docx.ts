@@ -8,9 +8,11 @@ import {
   BorderStyle,
   TabStopType,
   convertInchesToTwip,
+  ExternalHyperlink,
 } from "docx";
 import { saveAs } from "file-saver";
 import type { ResumeDocument, Section, Item } from "@/schema/resume";
+import { stripHtml, formatDate } from "@/assist/docText";
 
 /**
  * DOCX export — the editable twin of the PDF. This is the APPROXIMATION layer:
@@ -28,17 +30,21 @@ export async function exportDocx(doc: ResumeDocument) {
   const children: Paragraph[] = [];
 
   // Header
+  const nameRuns = htmlToRuns(header.name || "Your Name", font, 40, true);
   children.push(
     new Paragraph({
-      children: [new TextRun({ text: header.name || "Your Name", bold: true, size: 40, font, color: accent })],
+      children: nameRuns.map(r => new TextRun({ ...r, color: accent })),
     })
   );
   if (header.headline)
-    children.push(new Paragraph({ children: [new TextRun({ text: header.headline, size: 22, font })] }));
+    children.push(new Paragraph({ children: htmlToRuns(header.headline, font, 22) }));
 
   const contacts = header.contacts
     .filter((c) => c.visible && c.value.trim())
-    .map((c) => (c.label ? `${c.label}: ${c.value}` : c.value))
+    .map((c) => {
+      const value = c.type === "location" ? stripHtml(c.value) : c.value;
+      return c.label ? `${c.label}: ${value}` : value;
+    })
     .join("  •  ");
   if (contacts)
     children.push(new Paragraph({ children: [new TextRun({ text: contacts, size: 19, font })] }));
@@ -78,16 +84,23 @@ export async function exportDocx(doc: ResumeDocument) {
  * formatting from the inline editor carries through to the exported Word file.
  * Uses the browser DOM for parsing (this code only runs in-browser anyway).
  */
-function htmlToRuns(html: string, font: string, size: number): TextRun[] {
+function htmlToRuns(html: string, font: string, size: number, forceBold?: boolean): (TextRun | ExternalHyperlink)[] {
   if (!html?.trim()) return [new TextRun({ text: "", size, font })];
   const div = document.createElement("div");
   div.innerHTML = html;
-  const runs: TextRun[] = [];
+  const runs: (TextRun | ExternalHyperlink)[] = [];
 
-  function walk(node: Node, bold: boolean, italic: boolean) {
+  function walk(node: Node, bold: boolean, italic: boolean, href?: string) {
     if (node.nodeType === 3) {
       const t = node.textContent ?? "";
-      if (t) runs.push(new TextRun({ text: t, bold: bold || undefined, italics: italic || undefined, size, font }));
+      if (t) {
+        const run = new TextRun({ text: t, bold: forceBold || bold || undefined, italics: italic || undefined, size, font });
+        if (href) {
+          runs.push(new ExternalHyperlink({ children: [run], link: href }));
+        } else {
+          runs.push(run);
+        }
+      }
       return;
     }
     if (node.nodeType !== 1) return;
@@ -96,7 +109,8 @@ function htmlToRuns(html: string, font: string, size: number): TextRun[] {
     if (tag === "br") { runs.push(new TextRun({ text: "\n", size, font })); return; }
     const b2 = bold   || tag === "b" || tag === "strong";
     const i2 = italic || tag === "i" || tag === "em";
-    for (const child of Array.from(node.childNodes)) walk(child, b2, i2);
+    const h2 = href || (tag === "a" ? (el as HTMLAnchorElement).href : undefined);
+    for (const child of Array.from(node.childNodes)) walk(child, b2, i2, h2);
   }
 
   walk(div, false, false);
@@ -109,7 +123,7 @@ function sectionHeading(title: string, font: string, accent: string): Paragraph 
     keepNext: true, // never strand a heading at page bottom (Scenario C)
     spacing: { before: 160, after: 60 },
     border: { bottom: { style: BorderStyle.SINGLE, size: 8, color: accent, space: 1 } },
-    children: [new TextRun({ text: title.toUpperCase(), bold: true, size: 22, font, color: accent })],
+    children: [new TextRun({ text: stripHtml(title).toUpperCase(), bold: true, size: 22, font, color: accent })],
   });
 }
 
@@ -141,10 +155,14 @@ function itemParagraphs(
 
   const title = f.role || f.degree || f.title || "";
   const org = f.org || "";
-  const dates = [f.start, f.end].filter(Boolean).join(" – ");
-  const headText = [title, org].filter(Boolean).join(", ");
+  const dates = [f.start, f.end].filter(Boolean).map(d => formatDate(d, doc.theme.dateFormat)).join(" – ");
 
-  if (headText || dates) {
+  if (title || org || dates) {
+    const titleRuns = title ? htmlToRuns(title, font, sizeHalfPt, true) : [];
+    const orgRuns = org ? htmlToRuns(org, font, sizeHalfPt) : [];
+    const separator = title && org ? [new TextRun({ text: ", ", bold: true, size: sizeHalfPt, font })] : [];
+    const headRuns = [...titleRuns, ...separator, ...orgRuns];
+
     out.push(
       new Paragraph({
         keepNext: true, // keep entry header with its first bullet
@@ -152,7 +170,7 @@ function itemParagraphs(
         tabStops: [{ type: TabStopType.RIGHT, position: convertInchesToTwip(7.3) }],
         alignment: AlignmentType.LEFT,
         children: [
-          new TextRun({ text: headText, bold: true, size: sizeHalfPt, font }),
+          ...headRuns,
           new TextRun({ text: `\t${dates}`, size: sizeHalfPt, font }),
         ],
       })

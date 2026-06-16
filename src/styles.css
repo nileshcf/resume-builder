@@ -429,12 +429,18 @@ button, input, select, textarea { font: inherit; }
   transition: box-shadow .15s;
 }
 .ats-chip:hover { box-shadow: 0 0 0 3px rgba(37,99,235,.1); }
-.ats-dot { width: 8px; height: 8px; border-radius: 50%; flex: none; }
+.ats-ring { flex: none; }
 .ats-pop {
   position: absolute; top: 40px; left: 0; z-index: 40; width: 320px;
   background: var(--panel); border: 1px solid var(--border); border-radius: 12px;
   box-shadow: var(--shadow-md); padding: 8px;
 }
+.ats-header {
+  display: flex; justify-content: space-between; align-items: center;
+  padding: 6px 8px; border-bottom: 1px solid var(--border); margin-bottom: 6px;
+}
+.ats-score { font-size: 13px; font-weight: 700; }
+.ats-verdict { font-size: 12px; font-weight: 600; }
 .ats-row { display: flex; gap: 8px; padding: 6px; align-items: flex-start; }
 .ats-status {
   width: 20px; height: 20px; border-radius: 50%; color: #fff; font-size: 11px;

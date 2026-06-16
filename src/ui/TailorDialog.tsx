@@ -67,11 +67,17 @@ export function TailorDialog({ onClose }: { onClose: () => void }) {
                 <div className="kw-chips">
                   {report.missing.length === 0 && <span className="muted">None — strong match!</span>}
                   {report.missing.map((t) => (
-                    <span key={t.term} className="kw-chip kw-miss" title={`weight ${t.weight}`}>
+                    <span key={t.term} className="kw-chip kw-miss" title={`weight ${t.weight}${t.suggestedBullet ? ` · consider adding to: ${t.suggestedBullet}` : ""}`}>
                       {t.term}
+                      {t.suggestedBullet && <span style={{ fontSize: 10, opacity: 0.7, marginLeft: 4 }}>→</span>}
                     </span>
                   ))}
                 </div>
+                {report.missing.some(t => t.suggestedBullet) && (
+                  <div style={{ marginTop: 6, fontSize: 11, color: "var(--muted)" }}>
+                    💡 Arrows (→) indicate existing bullets where you could weave in the missing keyword
+                  </div>
+                )}
               </div>
 
               <div className="kw-group">

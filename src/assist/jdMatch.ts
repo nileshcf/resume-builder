@@ -1,5 +1,5 @@
 import type { ResumeDocument } from "@/schema/resume";
-import { collectText } from "./docText";
+import { collectText, stripHtml } from "./docText";
 
 /**
  * No-LLM job-description tailoring. Tokenizes the JD, extracts the terms that
@@ -38,6 +38,7 @@ export interface JdTerm {
   term: string;
   weight: number; // higher = more important in the JD
   inResume: boolean;
+  suggestedBullet?: string; // closest existing bullet to weave this term into
 }
 
 export interface JdReport {
@@ -54,9 +55,33 @@ function tokenize(text: string): string[] {
   return normalize(text).split(/\s+/).filter((w) => w.length > 1 && !STOPWORDS.has(w));
 }
 
+/** Calculate token overlap between two strings (0–1). */
+function tokenOverlap(a: string, b: string): number {
+  const tokensA = new Set(tokenize(a));
+  const tokensB = new Set(tokenize(b));
+  if (tokensA.size === 0 || tokensB.size === 0) return 0;
+  const intersection = new Set([...tokensA].filter(x => tokensB.has(x)));
+  return intersection.size / Math.max(tokensA.size, tokensB.size);
+}
+
+/** Collect all bullets from the resume for matching. */
+function collectBullets(doc: ResumeDocument): string[] {
+  const bullets: string[] = [];
+  for (const s of doc.sections.filter(s => s.visible)) {
+    for (const it of s.items) {
+      for (const b of it.bullets) {
+        const text = stripHtml(b.text).trim();
+        if (text) bullets.push(text);
+      }
+    }
+  }
+  return bullets;
+}
+
 export function analyzeJd(doc: ResumeDocument, jdText: string): JdReport {
   const resumeNorm = normalize(collectText(doc));
   const jdNorm = normalize(jdText);
+  const bullets = collectBullets(doc);
 
   const weights = new Map<string, number>();
   const bump = (term: string, w: number) =>
@@ -84,12 +109,27 @@ export function analyzeJd(doc: ResumeDocument, jdText: string): JdReport {
     .sort((a, b) => b.weight - a.weight)
     .slice(0, 40);
 
+  // For missing terms, find the closest bullet match
+  const termsWithSuggestions = terms.map(t => {
+    if (t.inResume || bullets.length === 0) return t;
+    let bestBullet: string | undefined;
+    let bestScore = 0;
+    for (const b of bullets) {
+      const score = tokenOverlap(t.term, b);
+      if (score > bestScore && score > 0.1) { // minimum threshold for relevance
+        bestScore = score;
+        bestBullet = b.length > 60 ? b.substring(0, 60) + "…" : b;
+      }
+    }
+    return { ...t, suggestedBullet: bestBullet };
+  });
+
   const totalW = terms.reduce((a, t) => a + t.weight, 0) || 1;
   const matchedW = terms.filter((t) => t.inResume).reduce((a, t) => a + t.weight, 0);
 
   return {
-    matched: terms.filter((t) => t.inResume),
-    missing: terms.filter((t) => !t.inResume),
+    matched: termsWithSuggestions.filter((t) => t.inResume),
+    missing: termsWithSuggestions.filter((t) => !t.inResume),
     coverage: matchedW / totalW,
   };
 }

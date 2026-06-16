@@ -19,6 +19,9 @@ export const ATS_FONTS = [
   "Helvetica",
   "Times New Roman",
   "Garamond",
+  "Cambria",
+  "Verdana",
+  "Tahoma",
 ] as const;
 
 export const ThemeSchema = z.object({
@@ -49,6 +52,13 @@ export const ThemeSchema = z.object({
    *   compact  — tighter spacing, smaller name, optimised for 1-page
    */
   layout: z.enum(["classic", "modern", "compact"]).default("classic"),
+  /**
+   * Date format for entry dates. Best-effort parsing from stored strings.
+   *   asTyped — use the exact string as typed by the user (default)
+   *   MY      — "Mar 2021" format (month abbreviation + year)
+   *   Y       — "2021" format (year only)
+   */
+  dateFormat: z.enum(["asTyped", "MY", "Y"]).default("asTyped"),
 });
 export type Theme = z.infer<typeof ThemeSchema>;
 

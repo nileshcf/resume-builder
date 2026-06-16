@@ -3,6 +3,7 @@ import type { ResumeDocument, Section, Item } from "@/schema/resume";
 import { fontStack } from "@/theme/fonts";
 import { useResume } from "@/store/resumeStore";
 import { InlineEdit } from "./InlineEdit";
+import { formatDate } from "@/assist/docText";
 
 /** Provides the store mutate function to all nested inline editors. */
 const MutateCtx = createContext<(fn: (d: ResumeDocument) => void) => void>(() => {});
@@ -60,17 +61,24 @@ export function ResumePreview({ doc }: { doc: ResumeDocument }) {
                 {visibleContacts.map((c, i) => (
                   <React.Fragment key={c.id}>
                     {i > 0 && <span>  •  </span>}
-                    <InlineEdit
-                      as="span"
-                      value={c.label ? `${c.label}: ${c.value}` : c.value}
-                      onChange={html => {
-                        const plain = html.replace(/<[^>]+>/g, "").replace(/&[^;]+;/g, m =>
-                          ({ "&amp;":"&","&lt;":"<","&gt;":">","&nbsp;":" " }[m] ?? m)
-                        );
-                        mutate(d => { d.header.contacts[i].value = plain.replace(/^[^:]+:\s*/, ""); });
-                      }}
-                      singleLine
-                    />
+                    {c.label && <span>{c.label}: </span>}
+                    {c.type === "link" && c.value.startsWith("http") ? (
+                      <a href={c.value} target="_blank" rel="noopener noreferrer" className="rich-editable">
+                        {c.value}
+                      </a>
+                    ) : (
+                      <InlineEdit
+                        as="span"
+                        value={c.value}
+                        onChange={html => {
+                          const plain = html.replace(/<[^>]+>/g, "").replace(/&[^;]+;/g, m =>
+                            ({ "&amp;":"&","&lt;":"<","&gt;":">","&nbsp;":" " }[m] ?? m)
+                          );
+                          mutate(d => { d.header.contacts[i].value = plain; });
+                        }}
+                        singleLine
+                      />
+                    )}
                   </React.Fragment>
                 ))}
               </div>
@@ -128,11 +136,14 @@ function ItemView({ item, section, doc }: { item: Item; section: Section; doc: R
       ? schema.itemTemplate.replace(/\{(\w+)\}/g, (_, k) => f[k] ?? "")
       : Object.values(f).join(" ");
     if (!line.trim()) return null;
+    // Custom-section items are rendered via the itemTemplate for export composition.
+    // Editing is done from the left-pane FormPane (not inline in preview) to avoid
+    // complexity with template-based rendering and to maintain consistency with how
+    // custom schemas are configured.
     return <p className="resume-item" dangerouslySetInnerHTML={{ __html: line }} />;
   }
 
   if (section.type === "summary" || section.type === "skills") {
-    if (!f.text?.trim() && !f.text) return null;
     return (
       <InlineEdit
         as="p"
@@ -147,7 +158,7 @@ function ItemView({ item, section, doc }: { item: Item; section: Section; doc: R
   const roleKey = section.type === "education" ? "degree" : "role";
   const titleVal = f[roleKey] || f.title || "";
   const org      = f.org || "";
-  const dates    = [f.start, f.end].filter(Boolean).join(" – ");
+  const dates    = [f.start, f.end].filter(Boolean).map(d => formatDate(d, doc.theme.dateFormat)).join(" – ");
   const hasHead  = titleVal || org || dates;
 
   if (!hasHead && item.bullets.every(b => !b.text.trim())) return null;

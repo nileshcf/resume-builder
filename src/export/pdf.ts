@@ -20,16 +20,24 @@ export function exportPdf(doc: ResumeDocument) {
   const { theme } = doc;
   const size = theme.pageSize === "A4" ? "A4" : "letter";
 
-  // Pull the app's resume CSS so the printed output matches the preview.
+  // Pull both linked stylesheets and inline <style> tags so dev mode works too.
   const styleHrefs = Array.from(document.styleSheets)
     .map((s) => s.href)
     .filter((h): h is string => !!h);
+  const inlineStyles = Array.from(document.querySelectorAll("style"))
+    .map((s) => s.textContent)
+    .filter(Boolean);
+
+  // Clone the paper and remove contenteditable attributes for clean print.
+  const clone = paper.cloneNode(true) as HTMLElement;
+  clone.querySelectorAll("[contenteditable]").forEach((e) => e.removeAttribute("contenteditable"));
 
   win.document.write(`<!doctype html><html><head>
     <meta charset="utf-8" />
     <title>${doc.meta.title}</title>
     ${styleHrefs.map((h) => `<link rel="stylesheet" href="${h}">`).join("")}
     <style>
+      ${inlineStyles.join("\n")}
       @page {
         size: ${size};
         margin: ${theme.margins.top}in ${theme.margins.right}in ${theme.margins.bottom}in ${theme.margins.left}in;
@@ -45,8 +53,11 @@ export function exportPdf(doc: ResumeDocument) {
       .resume-item { break-inside: avoid; }
       .resume-section h2 { break-after: avoid; }
       p, li { orphans: 2; widows: 2; }
+      /* Hide placeholder text and editable outlines in print */
+      [data-ph]:empty::before { content: none !important; }
+      .rich-editable { outline: none !important; background: none !important; }
     </style>
-  </head><body>${paper.outerHTML}</body></html>`);
+  </head><body>${clone.outerHTML}</body></html>`);
 
   win.document.close();
   // Give stylesheets a tick to load before printing.

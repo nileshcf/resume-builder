@@ -4,6 +4,7 @@ import { useResume } from "@/store/resumeStore";
 import type { Section, Item } from "@/schema/resume";
 import { analyzeBullet } from "@/assist/verbs";
 import { improveBullet, generateSummary } from "@/ai/capabilities";
+import { stripHtml } from "@/assist/docText";
 import {
   IconChevronUp, IconChevronDown, IconEye, IconEyeOff,
   IconTrash, IconPlus, IconZap, IconCheck,
@@ -17,6 +18,26 @@ export function FormPane() {
   const removeSection   = useResume(s => s.removeSection);
   const toggleVisible   = useResume(s => s.toggleSectionVisible);
   const reorder         = useResume(s => s.reorderSection);
+
+  const [draggedId, setDraggedId] = useState<string | null>(null);
+
+  const handleDragStart = (id: string) => {
+    setDraggedId(id);
+  };
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault(); // Allow drop
+  };
+
+  const handleDrop = (targetId: string) => {
+    if (!draggedId || draggedId === targetId) return;
+    const fromIndex = doc.sections.findIndex(s => s.id === draggedId);
+    const toIndex = doc.sections.findIndex(s => s.id === targetId);
+    if (fromIndex === -1 || toIndex === -1) return;
+    const direction = toIndex > fromIndex ? 1 : -1;
+    reorder(draggedId, direction);
+    setDraggedId(null);
+  };
 
   return (
     <div>
@@ -37,12 +58,62 @@ export function FormPane() {
               onChange={e => mutate(d => { d.header.headline = e.target.value; })} />
           </div>
           {doc.header.contacts.map((c, i) => (
-            <div className="field" key={c.id}>
-              <label>{c.label || c.type}</label>
-              <input value={c.value}
-                onChange={e => mutate(d => { d.header.contacts[i].value = e.target.value; })} />
+            <div key={c.id} style={{ marginBottom: 10 }}>
+              <div style={{ display: "flex", gap: 6, alignItems: "center" }}>
+                <select
+                  value={c.type}
+                  onChange={e => mutate(d => { d.header.contacts[i].type = e.target.value as any; })}
+                  style={{ fontSize: 12, padding: 4, borderRadius: 4, border: "1px solid var(--border)" }}
+                >
+                  <option value="email">Email</option>
+                  <option value="phone">Phone</option>
+                  <option value="location">Location</option>
+                  <option value="link">Link</option>
+                </select>
+                <button
+                  className="icon-btn"
+                  onClick={() => mutate(d => { d.header.contacts.splice(i, 1); })}
+                  title="Remove contact"
+                  aria-label="Remove contact"
+                >
+                  <IconTrash size={13} />
+                </button>
+                <button
+                  className="icon-btn"
+                  onClick={() => mutate(d => { d.header.contacts[i].visible = !c.visible; })}
+                  title={c.visible ? "Hide" : "Show"}
+                  aria-label={c.visible ? "Hide contact" : "Show contact"}
+                >
+                  {c.visible ? <IconEye size={13} /> : <IconEyeOff size={13} />}
+                </button>
+              </div>
+              {c.type === "link" && (
+                <div className="field" style={{ marginTop: 4 }}>
+                  <input
+                    placeholder="Label (e.g. LinkedIn, GitHub)"
+                    value={c.label || ""}
+                    onChange={e => mutate(d => { d.header.contacts[i].label = e.target.value; })}
+                    style={{ fontSize: 12, padding: 4 }}
+                  />
+                </div>
+              )}
+              <div className="field" style={{ marginTop: 4 }}>
+                <input value={c.value}
+                  onChange={e => mutate(d => { d.header.contacts[i].value = e.target.value; })} />
+              </div>
             </div>
           ))}
+          <button className="btn sm" onClick={() => mutate(d => {
+            d.header.contacts.push({
+              id: nanoid(),
+              type: "link",
+              value: "",
+              label: "",
+              visible: true
+            });
+          })}>
+            <IconPlus size={13} /> Add contact
+          </button>
         </div>
       </div>
 
@@ -55,6 +126,10 @@ export function FormPane() {
           onRemove={() => removeSection(section.id)}
           onUp={()    => reorder(section.id, -1)}
           onDown={()  => reorder(section.id,  1)}
+          onDragStart={() => handleDragStart(section.id)}
+          onDragOver={handleDragOver}
+          onDrop={() => handleDrop(section.id)}
+          isDragging={draggedId === section.id}
         />
       ))}
 
@@ -98,8 +173,9 @@ function addCustom(addSection: (t: any, title: string) => void, mutate: (fn: any
   });
 }
 
-function SectionCard({ section, onToggle, onRemove, onUp, onDown }: {
+function SectionCard({ section, onToggle, onRemove, onUp, onDown, onDragStart, onDragOver, onDrop, isDragging }: {
   section: Section; onToggle:()=>void; onRemove:()=>void; onUp:()=>void; onDown:()=>void;
+  onDragStart: () => void; onDragOver: (e: React.DragEvent) => void; onDrop: () => void; isDragging: boolean;
 }) {
   const mutate    = useResume(s => s.mutate);
   const addItem   = useResume(s => s.addItem);
@@ -111,7 +187,14 @@ function SectionCard({ section, onToggle, onRemove, onUp, onDown }: {
   });
 
   return (
-    <div className="card" style={{ opacity: section.visible ? 1 : 0.6 }}>
+    <div
+      className="card"
+      draggable
+      onDragStart={onDragStart}
+      onDragOver={onDragOver}
+      onDrop={onDrop}
+      style={{ opacity: section.visible ? 1 : 0.6, cursor: isDragging ? "grabbing" : "grab" }}
+    >
       <div className="card-head">
         <input className="title" value={section.title} onChange={e => setTitle(e.target.value)} />
         <button className="icon-btn" title="Move up"    aria-label="Move section up"   onClick={onUp}>
@@ -246,7 +329,7 @@ function TextSection({ isSummary, value, onChange }: {
 }) {
   const [busy, setBusy] = useState(false);
   const doc = useResume(s => s.doc);
-  const plain = value.replace(/<[^>]+>/g, "");
+  const plain = stripHtml(value);
 
   async function generate() {
     setBusy(true);
@@ -282,7 +365,7 @@ function TextSection({ isSummary, value, onChange }: {
 
 function BulletRow({ text, onChange }: { text: string; onChange: (v: string) => void }) {
   const [busy, setBusy] = useState(false);
-  const plain = text.replace(/<[^>]+>/g, "");
+  const plain = stripHtml(text);
   const hint  = analyzeBullet(plain);
 
   async function improve() {

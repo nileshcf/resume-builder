@@ -362,6 +362,16 @@ export function DesignDialog({ onClose }: { onClose: () => void }) {
       </div>
 
       <div className="field">
+        <label>Date format</label>
+        <select value={theme.dateFormat}
+          onChange={e => setT(t => { t.dateFormat = e.target.value as "asTyped" | "MY" | "Y"; })}>
+          <option value="asTyped">As typed (default)</option>
+          <option value="MY">Month + Year (Mar 2021)</option>
+          <option value="Y">Year only (2021)</option>
+        </select>
+      </div>
+
+      <div className="field">
         <label>Margins — {theme.margins.top.toFixed(2)}" all sides</label>
         <input type="range" min={0.4} max={1} step={0.05} value={theme.margins.top}
           onChange={e => {
